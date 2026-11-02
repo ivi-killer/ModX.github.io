@@ -19,7 +19,7 @@ GitHub Pages: Settings → Pages → Deploy from a branch → main → /(root).
 - Explorador y editor de archivos.
 - Deshacer/rehacer cambios recientes.
 - Validador básico de JSON, manifests y UUID.
-- Taller pixel-art con generación de imágenes mediante endpoints compatibles con OpenAI Images (`/images/generations`); configura URL base y modelo de imágenes por proveedor. NVIDIA puede requerir un endpoint/modelo de imagen específico, no todos sus NIM son compatibles con este formato.
+- Taller pixel-art con generación de imágenes mediante endpoints compatibles con OpenAI Images (`/images/generations`); configura URL base y modelo de imágenes por proveedor. La plantilla OpenAI usa `gpt-image-2.5-sunburst`. NVIDIA puede requerir un endpoint/modelo de imagen específico; no todos sus NIM son compatibles con este formato.
 - Vista previa 3D experimental de geometrías Bedrock JSON.
 - Exportación de proyecto como `.mcaddon`.
 
