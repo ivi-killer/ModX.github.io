@@ -24,7 +24,7 @@ GitHub Pages: Settings → Pages → Deploy from a branch → main → /(root).
 - Exportación de proyecto como `.mcaddon`.
 
 ## Diagnóstico de conexión (fetch)
-ModX diferencia errores HTTP (401/403/404/429/5xx) de fallos de red/CORS. La aplicación estática se ejecuta en el navegador; **no puede evitar las reglas CORS del proveedor**. NVIDIA publica su API OpenAI-compatible en `https://integrate.api.nvidia.com/v1`, pero si el navegador bloquea la petición se necesita un proxy HTTPS controlado por el usuario (por ejemplo, Cloudflare Worker) o un proveedor que permita CORS. No publiques claves API en repositorios ni las compartas.
+ModX diferencia errores HTTP (401/403/404/429/5xx) de fallos de red/CORS. La aplicación estática se ejecuta en el navegador; **no puede evitar las reglas CORS del proveedor**. NVIDIA publica su API OpenAI-compatible en `https://integrate.api.nvidia.com/v1`, pero si el navegador bloquea la petición, este repositorio incluye una plantilla opcional en `proxy/cloudflare-worker.js`. Despliega ese archivo como Worker, configura la variable `ALLOWED_HOSTS` con los dominios de tus proveedores (por ejemplo `integrate.api.nvidia.com,api.openai.com`) y pega la URL del Worker en el campo Proxy HTTPS de ModX. El proxy permite CORS y reenvía las peticiones, pero **no oculta la API Key del navegador**: sigue siendo una solución personal, no para publicar cuentas multiusuario. No publiques claves API en repositorios ni las compartas.
 
 ## Privacidad y límites
 - API keys, proyectos e historial se guardan en localStorage del navegador. Evita dispositivos compartidos.
