@@ -1,8 +1,24 @@
 # ModX Studio
 
+<p align="center">
+  <a href="https://ivi-killer.github.io/ModX.github.io/"><strong>🚀 Abrir ModX Studio</strong></a>
+</p>
+
+**Acceso directo:** https://ivi-killer.github.io/ModX.github.io/
+
 **ModX** es un estudio web asistido por inteligencia artificial para crear, editar, organizar y exportar add-ons de **Minecraft Bedrock Edition**. Reúne en una sola interfaz un chat especializado, un espacio de trabajo con proyectos, herramientas para editar archivos y utilidades para trabajar con recursos del juego.
 
 ModX está pensado como una herramienta personal y extensible: puedes conectar un proveedor de IA compatible, trabajar en distintos proyectos y conservar tus archivos y conversaciones en el almacenamiento local de tu navegador.
+
+## Empezar rápidamente
+
+1. Abre **[ModX Studio](https://ivi-killer.github.io/ModX.github.io/)**.
+2. En el panel lateral, entra en **Configuración**.
+3. Selecciona NVIDIA Build (o añade otro proveedor compatible), introduce tu API key y configura la URL del Cloudflare Worker si el proveedor necesita proxy.
+4. Pulsa **Probar conexión** y luego **Guardar proveedor**.
+5. Crea un proyecto y empieza a conversar con la IA.
+
+Los proyectos, archivos y chats se guardan localmente en el navegador. Usa el mismo navegador y dispositivo para acceder a esos datos.
 
 ## ¿Qué puedes hacer con ModX?
 
@@ -73,3 +89,9 @@ No requiere un proceso de compilación. Las dependencias principales se cargan d
 ## Proyecto y atribución
 
 ModX es un proyecto independiente y no está afiliado, respaldado ni patrocinado por Mojang Studios o Microsoft. Minecraft y Minecraft Bedrock Edition son marcas de sus respectivos propietarios.
+
+---
+
+## Un pequeño extra 🐈
+
+La documentación necesitaba una revisión felina. (La imagen se añadirá aquí cuando el archivo esté incorporado al repositorio.)
