@@ -89,9 +89,3 @@ No requiere un proceso de compilación. Las dependencias principales se cargan d
 ## Proyecto y atribución
 
 ModX es un proyecto independiente y no está afiliado, respaldado ni patrocinado por Mojang Studios o Microsoft. Minecraft y Minecraft Bedrock Edition son marcas de sus respectivos propietarios.
-
----
-
-## Un pequeño extra 🐈
-
-La documentación necesitaba una revisión felina. (La imagen se añadirá aquí cuando el archivo esté incorporado al repositorio.)
