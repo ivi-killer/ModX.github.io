@@ -117,6 +117,15 @@ Primeros módulos:
 - `src/ai/response-parser.js`: interpreta respuestas JSON multiarchivo y rechaza rutas peligrosas o entradas inválidas. No aplica cambios por sí mismo.
 - `src/ai/change-set.js`: clasifica los archivos nuevos y modificados y permite aplicar una propuesta completa o un subconjunto, sin escribir directamente en el proyecto desde el parser.
 
+Integración inicial con el chat:
+- [x] Importar los tres módulos desde `app.js`.
+- [x] Construir el contexto del proyecto mediante `buildProjectContext()` antes de enviar la solicitud.
+- [x] Interpretar las respuestas estructuradas mediante `parseAIResponse()`.
+- [x] Crear un conjunto de cambios sin modificar inmediatamente los archivos.
+- [x] Mostrar una propuesta multiarchivo con selección individual de archivos.
+- [x] Permitir aplicar los archivos seleccionados o descartar la propuesta.
+- [x] Registrar una instantánea antes de aplicar, para permitir revertir el conjunto con el botón Deshacer existente.
+
 Siguientes tareas:
 - Conectar el constructor de contexto y el parser al flujo actual de chat.
 - Crear una capa de propuestas con comparación de archivos existentes y nuevos.
