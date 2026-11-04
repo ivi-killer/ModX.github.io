@@ -88,7 +88,7 @@ Los directorios `ai/`, `textures/` y `models/` se completarán en sus respectiva
 - [x] Crear `src/main.js` como punto de entrada ES module.
 - [x] Cambiar `index.html` para cargar `src/main.js` mediante `type="module"`.
 - [x] Mantener temporalmente `app.js` intacto y cargarlo desde el nuevo punto de entrada.
-- [ ] Extraer inicialización, navegación, estado y notificaciones en módulos con límites claros.
+- [x] Extraer la utilidad de notificaciones en `src/ui/notifications.js` y conectarla con `app.js` mediante un adaptador.
 - [ ] Comprobar rutas relativas y funcionamiento desde GitHub Pages en móvil y escritorio.
 
 El puente inicial es intencional: no representa todavía la modularización completa. `app.js` seguirá siendo la implementación activa hasta que sus responsabilidades puedan extraerse y probarse de forma independiente.
