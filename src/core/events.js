@@ -8,7 +8,7 @@ export function bindAppEvents({ $, $$, handlers }) {
     if (element) element.addEventListener(event, callback);
   };
 
-  $$ (".nav[data-view]").forEach(button => {
+  $(".nav[data-view]").forEach(button => {
     button.addEventListener("click", () => handlers.view(button.dataset.view));
   });
 
