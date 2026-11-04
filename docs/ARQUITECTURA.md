@@ -96,7 +96,7 @@ Los directorios `ai/`, `textures/` y `models/` se completarán en sus respectiva
 - [x] Separar el registro de eventos de interfaz (`src/core/events.js`).
 - [x] Extraer el ciclo de vida e inicialización (`src/core/app.js`).
 - [x] Mantener `src/main.js` como entrada modular y `app.js` como coordinador temporal.
-- [x] Comprobar las rutas relativas y el funcionamiento general desde GitHub Pages; validación funcional reportada en móvil.
+- [ ] Probar la última extracción de eventos e inicialización desde GitHub Pages en móvil y escritorio.
 
 La migración es incremental: `app.js` sigue coordinando la aplicación y conserva las funciones heredadas que aún no se han extraído. Los módulos nuevos aíslan notificaciones, navegación, estado inicial, persistencia local, validación, registro de eventos y ciclo de vida. La extracción de proyectos, editor y servicios específicos continuará en etapas posteriores para evitar cambios de comportamiento innecesarios.
 
