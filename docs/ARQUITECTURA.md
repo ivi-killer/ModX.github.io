@@ -91,7 +91,7 @@ Los directorios `ai/`, `textures/` y `models/` se completarán en sus respectiva
 - [x] Extraer la utilidad de notificaciones en `src/ui/notifications.js` y conectarla con `app.js` mediante un adaptador.
 - [ ] Comprobar rutas relativas y funcionamiento desde GitHub Pages en móvil y escritorio.
 
-El puente inicial es intencional: no representa todavía la modularización completa. `app.js` seguirá siendo la implementación activa hasta que sus responsabilidades puedan extraerse y probarse de forma independiente.
+La migración es incremental: `app.js` sigue coordinando la aplicación y conserva las funciones heredadas que aún no se han extraído. Los módulos nuevos ya aíslan notificaciones, navegación, estado inicial, persistencia local y validación. El registro de eventos y la inicialización siguen pendientes.
 
 ### F2. Persistencia fiable
 - Crear una capa IndexedDB con versión de esquema.
