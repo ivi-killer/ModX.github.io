@@ -1,6 +1,7 @@
 import { showToast } from "./src/ui/notifications.js";
 import { activateView } from "./src/ui/navigation.js";
-import { readLocalState, writeLocalState } from "./src/storage/local-storage.js";
+import { writeLocalState } from "./src/storage/local-storage.js";
+import { createAppState } from "./src/core/state.js";
 import { validateProjectFiles } from "./src/editor/validation.js";
 
 (()=>{"use strict";
@@ -8,8 +9,8 @@ const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)],KEY
 const uid=()=>"xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g,c=>{let r=Math.random()*16|0;return(c==="x"?r:r&3|8).toString(16)});
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 function starter(){let b=uid(),r=uid();return{id:uid(),name:"Mi primer add-on",files:{"behavior_pack/manifest.json":JSON.stringify({format_version:2,header:{name:"Mi Add-on BP",description:"Creado con ModX",uuid:b,version:[1,0,0],min_engine_version:[1,20,0]},modules:[{type:"data",uuid:uid(),version:[1,0,0]}],dependencies:[{uuid:r,version:[1,0,0]}]},null,2),"resource_pack/manifest.json":JSON.stringify({format_version:2,header:{name:"Mi Add-on RP",description:"Creado con ModX",uuid:r,version:[1,0,0],min_engine_version:[1,20,0]},modules:[{type:"resources",uuid:uid(),version:[1,0,0]}]},null,2)},messages:[],history:[],undo:[],redo:[]}}
-function load(){try{let s=readLocalState(KEY);if(s&&s.projects?.length){s.providers=s.providers||[];s.providers.forEach(p=>{p.models=p.models||[];if((p.url||"").includes("integrate.api.nvidia.com")){p.model="nvidia/nemotron-3-ultra-550b-a55b";p.models=["nvidia/nemotron-3-ultra-550b-a55b"]}});return s}}catch(e){}let p=starter();return{projects:[p],active:p.id,providers:[{name:"NVIDIA Build",url:"https://integrate.api.nvidia.com/v1",model:"nvidia/nemotron-3-ultra-550b-a55b",key:"",models:[]},{name:"OpenAI",url:"https://api.openai.com/v1",model:"gpt-4.1-mini",key:"",models:[]}]}}
-let state=load(),project=state.projects.find(p=>p.id===state.active)||state.projects[0],active=0,activeHistoryId=null,selected=null,textureSize=16,pixels=Array(256).fill(null),drawing=false,scene3d=null,applyGeneratedImage=null;
+
+let state=createAppState(KEY,starter),project=state.projects.find(p=>p.id===state.active)||state.projects[0],active=0,activeHistoryId=null,selected=null,textureSize=16,pixels=Array(256).fill(null),drawing=false,scene3d=null,applyGeneratedImage=null;
 function persist(){try{writeLocalState(KEY,state);$("#saved").textContent="● Guardado local"}catch(e){toast("No se pudo guardar: almacenamiento local lleno","error")}}
 const toast=(s,type="")=>showToast(s,type,$("#toasts"));
 function snapshot(){project.undo=project.undo||[];project.undo.push(JSON.stringify(project.files));if(project.undo.length>40)project.undo.shift();project.redo=[]}
