@@ -83,7 +83,7 @@ Los directorios `ai/`, `textures/` y `models/` se completarán en sus respectiva
 
 ### F1. Base modular
 
-**Estado: en curso.**
+**Estado: completada y probada por el usuario en GitHub Pages.**
 
 - [x] Crear `src/main.js` como punto de entrada ES module.
 - [x] Cambiar `index.html` para cargar `src/main.js` mediante `type="module"`.
@@ -96,16 +96,32 @@ Los directorios `ai/`, `textures/` y `models/` se completarán en sus respectiva
 - [x] Separar el registro de eventos de interfaz (`src/core/events.js`).
 - [x] Extraer el ciclo de vida e inicialización (`src/core/app.js`).
 - [x] Mantener `src/main.js` como entrada modular y `app.js` como coordinador temporal.
-- [ ] Probar la última extracción de eventos e inicialización desde GitHub Pages en móvil y escritorio.
+- [x] Probar la aplicación después de la extracción de eventos e inicialización desde GitHub Pages.
 
 La migración es incremental: `app.js` sigue coordinando la aplicación y conserva las funciones heredadas que aún no se han extraído. Los módulos nuevos aíslan notificaciones, navegación, estado inicial, persistencia local, validación, registro de eventos y ciclo de vida. La extracción de proyectos, editor y servicios específicos continuará en etapas posteriores para evitar cambios de comportamiento innecesarios.
 
-### F2. Persistencia fiable
-- Crear una capa IndexedDB con versión de esquema.
-- Detectar los datos existentes en `localStorage` (`modx_studio_v1`).
-- Migrar proyectos, conversaciones, preferencias y recursos sin sobrescribir datos.
-- Verificar la migración antes de considerar la copia antigua prescindible.
-- Añadir exportación/importación de respaldo de datos.
+### F2. IA y trabajo sobre proyectos
+
+**Estado: en desarrollo.**
+
+Prioridades acordadas:
+- Construir contexto a partir de los archivos del proyecto, con selección explícita de rutas.
+- Permitir que la IA proponga la creación y modificación de varios archivos en una sola tarea.
+- Validar rutas y estructura de las respuestas antes de permitir aplicar cambios.
+- Presentar modificaciones como propuestas revisables y conservar historial para deshacerlas.
+- Incorporar selección de modelos y proveedores compatibles, priorizando endpoints gratuitos disponibles.
+- Mantener la conexión mediante el proxy configurado. La reparación del Worker queda pendiente y no se modifica sin solicitarlo.
+
+Primeros módulos:
+- `src/ai/context.js`: prepara contexto textual, permite limitarlo a rutas seleccionadas y omite contenido binario.
+- `src/ai/response-parser.js`: interpreta respuestas JSON multiarchivo y rechaza rutas peligrosas o entradas inválidas. No aplica cambios por sí mismo.
+
+Siguientes tareas:
+- Conectar el constructor de contexto y el parser al flujo actual de chat.
+- Crear una capa de propuestas con comparación de archivos existentes y nuevos.
+- Permitir aplicar o descartar el conjunto de cambios como una operación única.
+- Añadir pruebas para rutas, respuestas incompletas y múltiples archivos.
+- Implementar eliminación segura de proyectos, protegiendo el último proyecto y seleccionando otro automáticamente.
 
 ### F3. Sistema de proyectos y archivos
 - Centralizar creación, selección, renombrado e importación de proyectos.
