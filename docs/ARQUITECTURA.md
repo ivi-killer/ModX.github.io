@@ -115,6 +115,7 @@ Prioridades acordadas:
 Primeros módulos:
 - `src/ai/context.js`: prepara contexto textual, permite limitarlo a rutas seleccionadas y omite contenido binario.
 - `src/ai/response-parser.js`: interpreta respuestas JSON multiarchivo y rechaza rutas peligrosas o entradas inválidas. No aplica cambios por sí mismo.
+- `src/ai/change-set.js`: clasifica los archivos nuevos y modificados y permite aplicar una propuesta completa o un subconjunto, sin escribir directamente en el proyecto desde el parser.
 
 Siguientes tareas:
 - Conectar el constructor de contexto y el parser al flujo actual de chat.
