@@ -1,3 +1,5 @@
+import { showToast } from "./src/ui/notifications.js";
+
 (()=>{"use strict";
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)],KEY="modx_studio_v1";
 const uid=()=>"xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g,c=>{let r=Math.random()*16|0;return(c==="x"?r:r&3|8).toString(16)});
@@ -6,7 +8,7 @@ function starter(){let b=uid(),r=uid();return{id:uid(),name:"Mi primer add-on",f
 function load(){try{let s=JSON.parse(localStorage.getItem(KEY));if(s&&s.projects?.length){s.providers=s.providers||[];s.providers.forEach(p=>{p.models=p.models||[];if((p.url||"").includes("integrate.api.nvidia.com")){p.model="nvidia/nemotron-3-ultra-550b-a55b";p.models=["nvidia/nemotron-3-ultra-550b-a55b"]}});return s}}catch(e){}let p=starter();return{projects:[p],active:p.id,providers:[{name:"NVIDIA Build",url:"https://integrate.api.nvidia.com/v1",model:"nvidia/nemotron-3-ultra-550b-a55b",key:"",models:[]},{name:"OpenAI",url:"https://api.openai.com/v1",model:"gpt-4.1-mini",key:"",models:[]}]}}
 let state=load(),project=state.projects.find(p=>p.id===state.active)||state.projects[0],active=0,activeHistoryId=null,selected=null,textureSize=16,pixels=Array(256).fill(null),drawing=false,scene3d=null,applyGeneratedImage=null;
 function persist(){try{localStorage.setItem(KEY,JSON.stringify(state));$("#saved").textContent="● Guardado local"}catch(e){toast("No se pudo guardar: almacenamiento local lleno","error")}}
-function toast(s,type=""){let d=document.createElement("div");d.className="toast "+type;d.textContent=s;$("#toasts").append(d);setTimeout(()=>d.remove(),4500)}
+const toast=(s,type="")=>showToast(s,type,$("#toasts"));
 function snapshot(){project.undo=project.undo||[];project.undo.push(JSON.stringify(project.files));if(project.undo.length>40)project.undo.shift();project.redo=[]}
 function restoreStack(from,to){if(!from.length)return toast("No hay más cambios en el historial.","error");to.push(JSON.stringify(project.files));project.files=JSON.parse(from.pop());if(selected&&project.files[selected]!==undefined)$("#code").value=project.files[selected];else{selected=null;$("#code").value="";$("#filePath").textContent="Selecciona un archivo"}renderProject();renderTree();persist()}
 function renderProject(){$("#projectName").textContent=project.name;$("#fileCount").textContent=Object.keys(project.files).length;$("#bpCount").textContent=Object.keys(project.files).filter(x=>x.startsWith("behavior_pack/")).length+" archivos";$("#rpCount").textContent=Object.keys(project.files).filter(x=>x.startsWith("resource_pack/")).length+" archivos";renderProjects()}
