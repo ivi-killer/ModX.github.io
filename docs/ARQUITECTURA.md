@@ -8,7 +8,8 @@ La versión estable está publicada como sitio estático en GitHub Pages y no re
 
 - `index.html`: estructura y vistas de la aplicación.
 - `styles.css`: estilos globales y responsive.
-- `app.js`: lógica de aplicación concentrada en un IIFE.
+- `app.js`: lógica de aplicación concentrada en un IIFE; durante F1 se conserva como implementación heredada.
+- `src/main.js`: punto de entrada ES module que importa temporalmente `app.js` para mantener el comportamiento existente.
 - `proxy/cloudflare-worker.js`: proxy opcional para proveedores de IA.
 - Persistencia actual: `localStorage`, bajo la clave `modx_studio_v1`.
 - Dependencias externas: JSZip y Three.js desde CDN.
@@ -81,10 +82,16 @@ Los directorios `ai/`, `textures/` y `models/` se completarán en sus respectiva
 ## Plan de implementación de Fundamentos
 
 ### F1. Base modular
-- Crear el punto de entrada ES module.
-- Separar inicialización, navegación, estado y notificaciones.
-- Mantener temporalmente la interfaz y el comportamiento existentes.
-- Comprobar rutas relativas y funcionamiento desde GitHub Pages.
+
+**Estado: en curso.**
+
+- [x] Crear `src/main.js` como punto de entrada ES module.
+- [x] Cambiar `index.html` para cargar `src/main.js` mediante `type="module"`.
+- [x] Mantener temporalmente `app.js` intacto y cargarlo desde el nuevo punto de entrada.
+- [ ] Extraer inicialización, navegación, estado y notificaciones en módulos con límites claros.
+- [ ] Comprobar rutas relativas y funcionamiento desde GitHub Pages en móvil y escritorio.
+
+El puente inicial es intencional: no representa todavía la modularización completa. `app.js` seguirá siendo la implementación activa hasta que sus responsabilidades puedan extraerse y probarse de forma independiente.
 
 ### F2. Persistencia fiable
 - Crear una capa IndexedDB con versión de esquema.
@@ -120,4 +127,4 @@ Los directorios `ai/`, `textures/` y `models/` se completarán en sus respectiva
 
 ## Política de cambios
 
-El código de la versión estable no se reemplazará de golpe. Los cambios se desarrollarán en una rama separada, se probarán y solo después se integrarán en `main`. La rama `backup/v1.0.0` conserva el punto de partida.
+Los cambios de esta etapa se realizan directamente en `main`, según la decisión del proyecto. Se aplicarán en commits pequeños y verificables. La rama `backup/v1.0.0` conserva intacto el punto de partida.
