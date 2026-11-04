@@ -87,8 +87,13 @@ Los directorios `ai/`, `textures/` y `models/` se completarán en sus respectiva
 
 - [x] Crear `src/main.js` como punto de entrada ES module.
 - [x] Cambiar `index.html` para cargar `src/main.js` mediante `type="module"`.
-- [x] Mantener temporalmente `app.js` intacto y cargarlo desde el nuevo punto de entrada.
-- [x] Extraer la utilidad de notificaciones en `src/ui/notifications.js` y conectarla con `app.js` mediante un adaptador.
+- [x] Mantener temporalmente `app.js` como implementación activa y cargarlo desde el nuevo punto de entrada.
+- [x] Extraer notificaciones (`src/ui/notifications.js`).
+- [x] Extraer navegación (`src/ui/navigation.js`).
+- [x] Centralizar lectura y escritura local (`src/storage/local-storage.js`).
+- [x] Extraer creación y normalización del estado (`src/core/state.js`).
+- [x] Extraer validación de proyectos (`src/editor/validation.js`).
+- [ ] Separar el registro de eventos y la inicialización de la aplicación.
 - [ ] Comprobar rutas relativas y funcionamiento desde GitHub Pages en móvil y escritorio.
 
 La migración es incremental: `app.js` sigue coordinando la aplicación y conserva las funciones heredadas que aún no se han extraído. Los módulos nuevos ya aíslan notificaciones, navegación, estado inicial, persistencia local y validación. El registro de eventos y la inicialización siguen pendientes.
