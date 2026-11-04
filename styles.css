@@ -4,18 +4,3 @@
 
 /* Sidebar close control, project switcher and per-chat deletion */
 .sidebar .brand{position:relative}.sidebar-close{display:none;margin-left:auto;width:30px;height:30px;border:1px solid var(--line);border-radius:7px;background:#202a22;color:#c8d4c7;font-size:20px;line-height:1}.workspace-label{margin-top:16px}#projectList{display:flex;flex-direction:column;gap:3px;max-height:150px;overflow:auto;margin-bottom:8px}.project-entry{display:block;width:100%;border:1px solid transparent;background:transparent;color:#aab7ab;text-align:left;padding:8px 10px;border-radius:6px;font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.project-entry:hover,.project-entry.active{background:#263429;color:#fff}.project-entry.active{border-color:#405341}.history-row{display:flex;align-items:center;gap:3px}.history-row .history-entry{flex:1;min-width:0}.history-entry.active{background:#263429;color:#fff}.history-delete{flex:0 0 25px;width:25px;height:25px;border:0;border-radius:5px;background:transparent;color:#829082;font-size:16px;line-height:1;opacity:.65}.history-delete:hover{background:#492525;color:#ffc5c5;opacity:1}@media(max-width:760px){.sidebar-close{display:block}}
-
-
-/* F2 — AI multi-file proposal review */
-.change-proposal{flex:0 0 auto;margin:0 14px 10px;padding:12px;background:#18231b;border:1px solid #405a42;border-radius:9px;max-height:220px;overflow:auto}
-.change-proposal[hidden]{display:none}
-.proposal-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:9px;color:#e7f0e4;font-size:11px}
-.proposal-heading span{color:#9aaa98;font-size:9px}
-.proposal-list{display:flex;flex-direction:column;gap:5px}
-.proposal-file{display:flex;align-items:center;gap:8px;min-width:0;padding:6px 8px;background:#202e23;border-radius:6px;color:#dce8d9;font-size:10px}
-.proposal-file input{accent-color:#8abd60;flex:0 0 auto}
-.proposal-file span{min-width:0;overflow-wrap:anywhere;flex:1}
-.proposal-file small{color:#9db18f;font-size:9px;white-space:nowrap}
-.proposal-warning{margin:8px 0;color:#e5bd78;font-size:9px}
-.proposal-actions{display:flex;gap:7px;margin-top:10px}
-.proposal-actions .btn{flex:1}
