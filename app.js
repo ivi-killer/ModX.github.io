@@ -5,6 +5,9 @@ import { createAppState } from "./src/core/state.js";
 import { validateProjectFiles } from "./src/editor/validation.js";
 import { bindAppEvents } from "./src/core/events.js";
 import { startApplication } from "./src/core/app.js";
+import { buildProjectContext } from "./src/ai/context.js";
+import { parseAIResponse } from "./src/ai/response-parser.js";
+import { createChangeSet, applyChangeSet } from "./src/ai/change-set.js";
 
 (()=>{"use strict";
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)],KEY="modx_studio_v1";
@@ -12,7 +15,7 @@ const uid=()=>"xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g,c=>{let r=M
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 function starter(){let b=uid(),r=uid();return{id:uid(),name:"Mi primer add-on",files:{"behavior_pack/manifest.json":JSON.stringify({format_version:2,header:{name:"Mi Add-on BP",description:"Creado con ModX",uuid:b,version:[1,0,0],min_engine_version:[1,20,0]},modules:[{type:"data",uuid:uid(),version:[1,0,0]}],dependencies:[{uuid:r,version:[1,0,0]}]},null,2),"resource_pack/manifest.json":JSON.stringify({format_version:2,header:{name:"Mi Add-on RP",description:"Creado con ModX",uuid:r,version:[1,0,0],min_engine_version:[1,20,0]},modules:[{type:"resources",uuid:uid(),version:[1,0,0]}]},null,2)},messages:[],history:[],undo:[],redo:[]}}
 
-let state=createAppState(KEY,starter),project=state.projects.find(p=>p.id===state.active)||state.projects[0],active=0,activeHistoryId=null,selected=null,textureSize=16,pixels=Array(256).fill(null),drawing=false,scene3d=null,applyGeneratedImage=null;
+let state=createAppState(KEY,starter),project=state.projects.find(p=>p.id===state.active)||state.projects[0],active=0,activeHistoryId=null,selected=null,textureSize=16,pixels=Array(256).fill(null),drawing=false,scene3d=null,applyGeneratedImage=null,pendingChangeSet=null;
 function persist(){try{writeLocalState(KEY,state);$("#saved").textContent="● Guardado local"}catch(e){toast("No se pudo guardar: almacenamiento local lleno","error")}}
 const toast=(s,type="")=>showToast(s,type,$("#toasts"));
 function snapshot(){project.undo=project.undo||[];project.undo.push(JSON.stringify(project.files));if(project.undo.length>40)project.undo.shift();project.redo=[]}
@@ -30,14 +33,89 @@ function openFile(p){selected=p;$("#filePath").textContent=p;$("#code").value=pr
 function provider(){return state.providers[active]}
 function ready(){let p=provider();return !!(p?.url&&p?.model&&p?.key)}
 const CONTEXT="Eres ModX AI, ingeniero senior especializado exclusivamente en Minecraft Bedrock Edition y add-ons completos. Dominas Behavior Packs, Resource Packs, manifest.json format_version 2, UUID v4 únicos, dependencias, min_engine_version, entidades, component_groups, eventos, spawn_rules, bloques, items, recetas, loot tables, funciones mcfunction, client_entity, render_controllers, animaciones, animation_controllers, Molang, partículas, sonidos, terrain_texture, item_texture, atlas y geometrías geometry JSON (bones, cubes, pivots, UV, visible_bounds). No uses sintaxis Java Edition ni componentes inexistentes. Respeta las versiones y esquemas reales de Bedrock. Si piden crear/reparar/modificar el proyecto, responde ÚNICAMENTE JSON válido con forma {\"summary\":\"...\",\"files\":[{\"path\":\"behavior_pack/...\",\"content\":\"contenido completo\"}],\"notes\":[\"...\"]}. Devuelve archivos completos, no fragmentos. Incluye todos los archivos necesarios, rutas relativas, manifests, UUID distintos y referencias coherentes. Al crear mobs/modelos incluye geometry JSON, client_entity, render controller, textura y referencias; si no puedes producir PNG binario, crea un archivo .txt con un patrón pixel-art/paleta y explica que el usuario debe dibujar o generar PNG, no finjas que se creó un PNG. Al crear texturas, proporciona además un mapa pixel-art 16x16 como filas de colores hexadecimales en notes para que el editor pueda representarlo. Si se pregunta algo general, contesta normalmente. Antes de responder, revisa JSON, rutas, dependencias y referencias.";
-function system(){return CONTEXT+"\nPROYECTO: "+project.name+"\nARCHIVOS ACTUALES:\n"+Object.entries(project.files).map(([p,c])=>"---"+p+"---\n"+(c.startsWith("__BASE64__:")?"[recurso binario]":c.slice(0,5000))).join("\n")}
+function system(){const context=buildProjectContext(project);return CONTEXT+"\n"+context.text+"\nDevuelve únicamente JSON con summary, files y notes cuando propongas cambios de archivos."}
 function parse(raw){let s=raw.trim().replace(/^```(?:json)?\s*/i,"").replace(/\s*```$/,"");try{let x=JSON.parse(s);return Array.isArray(x.files)?x:null}catch(e){let a=s.indexOf('{"summary"');if(a>=0)try{let x=JSON.parse(s.slice(a));return Array.isArray(x.files)?x:null}catch(e){}return null}}
 function explainFetch(e){let m=e.message||String(e);if(e.name==="TypeError"||/failed to fetch|networkerror|load failed/i.test(m))return "El navegador no pudo completar la conexión. Para NVIDIA desde GitHub Pages, configura y despliega el Cloudflare Worker incluido en el repositorio, y pega su URL en Proxy HTTPS. El navegador no puede saltarse CORS. Comprueba también que la URL base sea https://integrate.api.nvidia.com/v1 y que tu API Key y el endpoint estén activos.";return m}
 async function request(p,path,body,method="POST"){let url=p.url.replace(/\/+$/,"")+"/"+path.replace(/^\/+/, "");let opts={method,headers:{"Authorization":"Bearer "+p.key,"Accept":"application/json"}};if(body){opts.headers["Content-Type"]="application/json";opts.body=JSON.stringify(body)}let response;try{if(p.proxyUrl){opts.headers["X-ModX-Target"]=url;response=await fetch(p.proxyUrl.replace(/\/+$/,""),opts)}else{response=await fetch(url,opts)}}catch(e){throw Error(explainFetch(e))}let raw=await response.text();let data;try{data=raw?JSON.parse(raw):{}}catch(e){data={raw:raw.slice(0,500)}}if(!response.ok){let msg=data.error?.message||data.message||data.detail||raw.slice(0,350)||response.statusText;throw Error("HTTP "+response.status+" · "+msg)}return data}
 async function requestStream(p,path,body,onToken){let url=p.url.replace(/\/+$/,"")+"/"+path.replace(/^\/+/, "");let opts={method:"POST",headers:{"Authorization":"Bearer "+p.key,"Accept":"text/event-stream, application/json","Content-Type":"application/json"},body:JSON.stringify(body)};if(p.proxyUrl){opts.headers["X-ModX-Target"]=url;url=p.proxyUrl.replace(/\/+$/,"")}let response;try{response=await fetch(url,opts)}catch(e){throw Error(explainFetch(e))}if(!response.ok){let raw=await response.text(),d;try{d=JSON.parse(raw)}catch(e){d={}}throw Error("HTTP "+response.status+" · "+(d.error?.message||d.message||raw.slice(0,400)||response.statusText))}if(!response.body)throw Error("El navegador no admite lectura streaming de esta respuesta.");let reader=response.body.getReader(),decoder=new TextDecoder(),buffer="",content="",reasoning="";while(true){let part=await reader.read();if(part.done)break;buffer+=decoder.decode(part.value,{stream:true});let lines=buffer.split(/\r?\n/);buffer=lines.pop()||"";for(let line of lines){if(!line.startsWith("data:"))continue;let raw=line.slice(5).trim();if(!raw||raw==="[DONE]")continue;let chunk;try{chunk=JSON.parse(raw)}catch(e){continue}let delta=chunk.choices?.[0]?.delta||{};if(typeof delta.reasoning_content==="string")reasoning+=delta.reasoning_content;if(typeof delta.content==="string"){content+=delta.content;onToken?.(content,reasoning)}}}return{content,reasoning}}
 async function loadModels(showToast=true){let p={...provider(),url:$("#pUrl").value.trim().replace(/\/+$/,""),key:$("#pKey").value.trim(),proxyUrl:$("#pProxy").value.trim()};if(p.url.includes("integrate.api.nvidia.com")){let only=["nvidia/nemotron-3-ultra-550b-a55b"];$("#pModel").value=only[0];renderModelSelect(only,only[0]);$("#modelFeedback").textContent="NVIDIA fijado a Nemotron Ultra 550B. No necesitas cargar otros modelos.";return}if(!p.url||!p.key){$("#modelFeedback").textContent="Introduce URL y API Key antes de cargar modelos.";return}$("#modelFeedback").textContent="Consultando "+p.url+"/models ...";try{let data=await request(p,"models",null,"GET"),models=(data.data||data.models||[]).map(x=>typeof x==="string"?x:x.id).filter(Boolean);if(!models.length)throw Error("El endpoint respondió, pero no devolvió una lista data[].id. Puedes escribir el ID manualmente.");provider().models=models;renderModelSelect(models,$("#pModel").value);$("#modelFeedback").textContent="✓ "+models.length+" modelos disponibles.";if(showToast)toast("Catálogo de modelos actualizado.")}catch(e){$("#modelFeedback").textContent="No se pudo cargar el catálogo: "+e.message+" Puedes escribir el ID del modelo manualmente.";renderModelSelect(provider()?.models||[],$("#pModel").value)}}
 function renderModelSelect(models,selectedValue){let s=$("#pModelSelect");if(!s)return;s.innerHTML='<option value="">Seleccionar modelo del catálogo…</option>';models.forEach(id=>{let o=document.createElement("option");o.value=id;o.textContent=id;s.append(o)});if(selectedValue){s.value=selectedValue;if(s.value!==selectedValue){let o=document.createElement("option");o.value=selectedValue;o.textContent=selectedValue+" (manual)";s.append(o);s.value=selectedValue}}}
-async function send(text){text=text.trim();if(!text)return;if(!ready()){toast("Añade una API Key en Configuración.","error");openSettings();return}project.messages.push({role:"user",content:text});addMsg("user",text);$("#prompt").value="";let wait=document.createElement("div");wait.className="message";wait.innerHTML='<div class="avatar">✳</div><div class="message-body"><div class="message-head">Nemotron Ultra</div><div class="bubble">Conectando y analizando el proyecto...</div></div>';$("#messages").append(wait);$("#messages").scrollTop=$("#messages").scrollHeight;$("#send").disabled=true;try{let p=provider(),nvidia=(p.url||"").includes("integrate.api.nvidia.com"),body={model:nvidia?"nvidia/nemotron-3-ultra-550b-a55b":p.model,messages:[{role:"system",content:system()},...project.messages.map(m=>({role:m.role,content:m.content}))],temperature:nvidia?1:.35,top_p:nvidia?0.95:1,max_tokens:nvidia?16384:6000,stream:true};let result=await requestStream(p,"chat/completions",body,(content,reasoning)=>{let bubble=wait.querySelector(".bubble");if(bubble)bubble.textContent=content||"Nemotron está razonando...";$("#messages").scrollTop=$("#messages").scrollHeight});let answer=result.content;if(!answer)throw Error("El proveedor no devolvió contenido. Comprueba el modelo y los permisos de tu endpoint.");let parsed=parse(answer),changed=[];if(parsed){snapshot();for(let f of parsed.files){if(!f.path||f.path.startsWith("/")||f.path.split("/").includes(".."))continue;project.files[f.path]=f.content??"";changed.push(f.path)}answer=(parsed.summary||"Proyecto actualizado")+(parsed.notes?.length?"\n\n"+parsed.notes.map(x=>"• "+x).join("\n"):"");renderProject();renderTree()}wait.remove();project.messages.push({role:"assistant",content:answer,files:changed});addMsg("assistant",answer,changed);saveHistory();persist()}catch(e){wait.remove();let m="No se pudo completar la solicitud:\n"+e.message;project.messages.push({role:"assistant",content:m});addMsg("assistant",m);saveHistory()}finally{$("#send").disabled=false}}
+async function send(text){text=text.trim();if(!text)return;if(!ready()){toast("Añade una API Key en Configuración.","error");openSettings();return}project.messages.push({role:"user",content:text});addMsg("user",text);$("#prompt").value="";let wait=document.createElement("div");wait.className="message";wait.innerHTML='<div class="avatar">✳</div><div class="message-body"><div class="message-head">Nemotron Ultra</div><div class="bubble">Conectando y analizando el proyecto...</div></div>';$("#messages").append(wait);$("#messages").scrollTop=$("#messages").scrollHeight;$("#send").disabled=true;try{let p=provider(),nvidia=(p.url||"").includes("integrate.api.nvidia.com"),body={model:nvidia?"nvidia/nemotron-3-ultra-550b-a55b":p.model,messages:[{role:"system",content:system()},...project.messages.map(m=>({role:m.role,content:m.content}))],temperature:nvidia?1:.35,top_p:nvidia?0.95:1,max_tokens:nvidia?16384:6000,stream:true};let result=await requestStream(p,"chat/completions",body,(content,reasoning)=>{let bubble=wait.querySelector(".bubble");if(bubble)bubble.textContent=content||"Nemotron está razonando...";$("#messages").scrollTop=$("#messages").scrollHeight});let answer=result.content;if(!answer)throw Error("El proveedor no devolvió contenido. Comprueba el modelo y los permisos de tu endpoint.");let parsed=parseAIResponse(answer),changed=[];if(parsed){pendingChangeSet=createChangeSet(project.files,parsed);answer=(pendingChangeSet.summary||"Cambios propuestos")+(pendingChangeSet.notes.length?"\n\n"+pendingChangeSet.notes.map(x=>"• "+x).join("\n"):"")+"\n\nRevisa los archivos propuestos antes de aplicarlos.";renderChangeProposal()}wait.remove();project.messages.push({role:"assistant",content:answer,files:changed});addMsg("assistant",answer,changed);saveHistory();persist()}catch(e){wait.remove();let m="No se pudo completar la solicitud:\n"+e.message;project.messages.push({role:"assistant",content:m});addMsg("assistant",m);saveHistory()}finally{$("#send").disabled=false}}
+function renderChangeProposal(){
+  const host=$("#changeProposal");
+  if(!host)return;
+  host.innerHTML="";
+  if(!pendingChangeSet||!pendingChangeSet.changes.length){
+    host.hidden=true;
+    return;
+  }
+  host.hidden=false;
+  const heading=document.createElement("div");
+  heading.className="proposal-heading";
+  const title=document.createElement("b");
+  title.textContent="Propuesta de cambios";
+  const summary=document.createElement("span");
+  summary.textContent=pendingChangeSet.createdCount+" nuevos · "+pendingChangeSet.updatedCount+" modificados";
+  heading.append(title,summary);
+  host.append(heading);
+  const list=document.createElement("div");
+  list.className="proposal-list";
+  pendingChangeSet.changes.forEach(change=>{
+    const row=document.createElement("label");
+    row.className="proposal-file";
+    const check=document.createElement("input");
+    check.type="checkbox";
+    check.checked=true;
+    check.dataset.path=change.path;
+    const name=document.createElement("span");
+    name.textContent=change.path;
+    const kind=document.createElement("small");
+    kind.textContent=change.action==="create"?"Nuevo":"Modificar";
+    row.append(check,name,kind);
+    list.append(row);
+  });
+  host.append(list);
+  if(pendingChangeSet.rejected.length){
+    const warnings=document.createElement("p");
+    warnings.className="proposal-warning";
+    warnings.textContent=pendingChangeSet.rejected.join(" · ");
+    host.append(warnings);
+  }
+  const actions=document.createElement("div");
+  actions.className="proposal-actions";
+  const accept=document.createElement("button");
+  accept.className="btn primary";
+  accept.textContent="Aplicar seleccionados";
+  accept.onclick=()=>{
+    const paths=[...host.querySelectorAll('input[type="checkbox"]:checked')].map(input=>input.dataset.path);
+    if(!paths.length)return toast("Selecciona al menos un archivo.","error");
+    snapshot();
+    const result=applyChangeSet(project.files,pendingChangeSet,paths);
+    project.files=result.files;
+    const applied=result.applied;
+    pendingChangeSet=null;
+    host.hidden=true;
+    renderProject();
+    renderTree();
+    if(selected&&project.files[selected]!==undefined)$("#code").value=project.files[selected];
+    const message="Cambios aplicados: "+applied.length+" archivo(s). Puedes usar Deshacer para revertirlos.";
+    project.messages.push({role:"assistant",content:message,files:applied});
+    addMsg("assistant",message,applied);
+    saveHistory();
+    persist();
+    toast("Propuesta aplicada.");
+  };
+  const reject=document.createElement("button");
+  reject.className="btn outline";
+  reject.textContent="Rechazar";
+  reject.onclick=()=>{
+    pendingChangeSet=null;
+    host.hidden=true;
+    toast("Propuesta descartada.");
+  };
+  actions.append(accept,reject);
+  host.append(actions);
+}
 function openSettings(){$("#sidebar").classList.remove("open");$("#settings").classList.add("open");renderProviders()}
 function renderProviders(){let box=$("#providerList");box.innerHTML="";state.providers.forEach((p,i)=>{let b=document.createElement("button");b.className="provider"+(i===active?" active":"");b.textContent=p.name+" · "+(p.model||"sin modelo");b.onclick=()=>{active=i;renderProviders()};box.append(b)});let p=provider()||{};$("#pName").value=p.name||"";$("#pUrl").value=p.url||"";$("#pModel").value=p.model||"";$("#pKey").value=p.key||"";$("#pProxy").value=p.proxyUrl||"";$("#pImageUrl").value=p.imageUrl||"";$("#pImageModel").value=p.imageModel||"";$("#pModel").readOnly=(p.url||"").includes("integrate.api.nvidia.com");renderModelSelect(p.models||[],p.model||"");$("#providerName").textContent=ready()?p.name:"Sin IA conectada";$("#providerModel").textContent=p.model||"Configura un proveedor";$("#statusDot").classList.toggle("online",!!ready());$("#modelTag").textContent=p.model||"Sin modelo";$("#chatStatus").textContent=ready()?"Proveedor seleccionado · "+p.name:"Configura una IA para comenzar"}
 function saveProvider(){let p={...(provider()||{}),name:$("#pName").value.trim()||"Personalizado",url:$("#pUrl").value.trim().replace(/\/+$/,""),model:$("#pUrl").value.includes("integrate.api.nvidia.com")?"nvidia/nemotron-3-ultra-550b-a55b":$("#pModel").value.trim(),key:$("#pKey").value.trim(),proxyUrl:$("#pProxy").value.trim(),imageUrl:$("#pImageUrl").value.trim(),imageModel:$("#pImageModel").value.trim(),models:provider()?.models||[]};if(!p.url||!p.model||!p.key)return toast("Completa URL, modelo y API Key.","error");if(!/^https:\/\//i.test(p.url))return toast("La URL debe usar HTTPS.","error");if(!/^[a-z0-9.-]+$/i.test(new URL(p.url).hostname))return toast("URL no válida.","error");state.providers[active]=p;persist();renderProviders();toast("Proveedor guardado localmente.")}
